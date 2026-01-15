@@ -1,0 +1,233 @@
+/* ==========================================================================
+   1. CORE VARIABLES & RESET
+   ========================================================================== */
+:root {
+    --bg-dark: #0a0a0a;
+    --felt: #064e3b; /* Màu nỉ xanh huyền thoại */
+    --gold: #f59e0b;
+    --wood: #451a03;
+    --text: #ffffff;
+    
+    /* Player Colors (Neon Style) */
+    --red: #ff1744; 
+    --green: #00e676; 
+    --blue: #2979ff; 
+    --yellow: #ffea00;
+
+    /* Responsive Units */
+    --board-w: min(95vw, 55vh);
+    --cell: calc(var(--board-w) / 15);
+}
+
+* { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+body {
+    margin: 0; height: 100vh; overflow: hidden;
+    background: radial-gradient(circle at center, #1f2937 0%, #000000 100%);
+    font-family: 'Roboto Condensed', sans-serif;
+    color: var(--text);
+    display: flex; justify-content: center; align-items: center;
+}
+
+/* ==========================================================================
+   2. THE BOARD (BÀN CỜ)
+   ========================================================================== */
+.game-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 20px;
+    width: 100%; height: 100%; justify-content: center;
+}
+
+/* Màn hình ngang (PC/iPad) */
+@media (min-width: 768px) and (orientation: landscape) {
+    .game-wrapper { flex-direction: row; gap: 50px; }
+    :root { --board-w: 85vh; }
+}
+
+.board-frame {
+    padding: 15px; background: var(--wood);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.9), inset 0 0 40px rgba(0,0,0,0.8);
+    border: 3px solid #78350f; position: relative;
+}
+
+.board {
+    width: var(--board-w); height: var(--board-w);
+    display: grid;
+    grid-template-columns: repeat(15, 1fr);
+    grid-template-rows: repeat(15, 1fr);
+    background-color: var(--felt);
+    /* Texture vải nỉ cao cấp */
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 4px);
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Canvas hiệu ứng (Nổ/Pháo hoa) */
+#fxCanvas {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 999;
+}
+
+/* Cells */
+.cell { display: flex; justify-content: center; align-items: center; }
+.dot { 
+    width: 25%; height: 25%; background: rgba(0,0,0,0.4); border-radius: 50%;
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Điểm Start (Neon Glow) */
+.start .dot { 
+    width: 80%; height: 80%; background: transparent; 
+    border: 2px solid currentColor;
+    box-shadow: 0 0 10px currentColor;
+}
+.c-red { color: var(--red); } .c-green { color: var(--green); }
+.c-blue { color: var(--blue); } .c-yellow { color: var(--yellow); }
+
+/* Đích đến */
+.dest .dot { width: 90%; height: 90%; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); color: white; display:flex; justify-content:center; align-items:center; font-size:1.2vh;}
+.bg-red .dot { background: linear-gradient(135deg, var(--red), #7f1d1d); }
+.bg-green .dot { background: linear-gradient(135deg, var(--green), #14532d); }
+.bg-blue .dot { background: linear-gradient(135deg, var(--blue), #1e3a8a); }
+.bg-yellow .dot { background: linear-gradient(135deg, var(--yellow), #713f12); color: black; }
+
+/* Khu vực chuồng */
+.base { border: 2px solid rgba(255,255,255,0.1); }
+.b-red { grid-area: 1/1/7/7; background: rgba(239, 68, 68, 0.1); }
+.b-green { grid-area: 1/10/7/16; background: rgba(34, 197, 94, 0.1); }
+.b-blue { grid-area: 10/10/16/16; background: rgba(59, 130, 246, 0.1); }
+.b-yellow { grid-area: 10/1/16/7; background: rgba(234, 179, 8, 0.1); }
+
+/* ==========================================================================
+   3. NGỰA 3D (CHIP STYLE)
+   ========================================================================== */
+.horse {
+    width: var(--cell); height: var(--cell);
+    position: absolute; top: 0; left: 0; z-index: 10;
+    border-radius: 50%;
+    /* Tạo khối 3D */
+    background: conic-gradient(from 45deg, #fff 0deg 90deg, transparent 90deg 360deg);
+    box-shadow: 0 5px 5px rgba(0,0,0,0.7), inset 0 2px 5px rgba(255,255,255,0.5);
+    display: flex; justify-content: center; align-items: center;
+    font-weight: bold; color: #fff; font-size: 1.5vh; text-shadow: 1px 1px 2px #000;
+    cursor: pointer;
+    will-change: transform; transition: none; /* JS sẽ xử lý animation */
+}
+.horse::after { content:''; position:absolute; inset:4px; border-radius:50%; border:2px dashed rgba(255,255,255,0.7); z-index:-1; }
+
+.h-red::after { background: radial-gradient(circle, var(--red), #7f1d1d); }
+.h-green::after { background: radial-gradient(circle, var(--green), #14532d); }
+.h-blue::after { background: radial-gradient(circle, var(--blue), #1e3a8a); }
+.h-yellow::after { background: radial-gradient(circle, var(--yellow), #713f12); }
+.h-yellow { color: black; text-shadow: none; }
+
+/* Hiệu ứng chọn */
+.can-move { animation: pulse 0.8s infinite alternate; z-index: 100 !important; filter: brightness(1.3); }
+@keyframes pulse { from { transform: translate(var(--tx), var(--ty)) scale(1); } to { transform: translate(var(--tx), calc(var(--ty) - 5px)) scale(1.1); box-shadow: 0 0 20px var(--gold); } }
+
+/* ==========================================================================
+   4. CONTROL PANEL & 3D DICE
+   ========================================================================== */
+.controls-panel {
+    display: flex; flex-direction: column; align-items: center; gap: 15px;
+    width: 200px;
+}
+
+.turn-indicator {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    padding: 10px; border-radius: 12px; width: 100%; text-align: center;
+}
+.label { font-size: 0.8rem; color: #aaa; letter-spacing: 2px; }
+.player-name { display: block; font-size: 1.5rem; font-weight: bold; margin-top: 5px; text-transform: uppercase;}
+
+/* Bát đĩa */
+.shaker-container { width: 140px; height: 140px; position: relative; perspective: 600px; }
+.plate {
+    width: 100%; height: 100%; border-radius: 50%;
+    background: #e2e8f0; border: 4px solid #cbd5e1;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+    display: flex; justify-content: center; align-items: center;
+}
+
+/* XÚC XẮC 3D THỰC SỰ */
+.dice-wrapper { width: 40px; height: 40px; position: relative; transform-style: preserve-3d; }
+.dice {
+    width: 100%; height: 100%; position: absolute;
+    transform-style: preserve-3d;
+    transition: transform 0.5s ease-out;
+}
+.face {
+    position: absolute; width: 40px; height: 40px;
+    background: white; border: 1px solid #ccc; border-radius: 8px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+}
+/* Tạo hình lập phương */
+.face.front  { transform: translateZ(20px); }
+.face.back   { transform: rotateY(180deg) translateZ(20px); }
+.face.right  { transform: rotateY(90deg) translateZ(20px); }
+.face.left   { transform: rotateY(-90deg) translateZ(20px); }
+.face.top    { transform: rotateX(90deg) translateZ(20px); }
+.face.bottom { transform: rotateX(-90deg) translateZ(20px); }
+
+/* Chấm bi xúc xắc (Dùng background-image radial gradient cho nhẹ) */
+.face { background-size: 40px 40px; }
+/* Chúng ta sẽ dùng JS để đổi background-position hoặc class cho các mặt, 
+   nhưng ở Level Max, ta dùng class cụ thể để map texture nếu cần. 
+   Ở đây tôi dùng kỹ thuật background-image đơn giản hóa để code ngắn */
+.face::after { content:''; display:block; width:100%; height:100%; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="10" fill="black"/></svg>') no-repeat center; }
+/* Note: Để xúc xắc đẹp hoàn hảo, ta sẽ cần thêm CSS chi tiết cho từng mặt 1-6. 
+   Để tiết kiệm không gian, tôi sẽ dùng JS để xoay mặt xúc xắc về phía người xem */
+
+.bowl {
+    width: 150px; height: 150px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #3b82f6, #1e3a8a);
+    position: absolute; top: -5px; left: -5px;
+    border: 4px solid white;
+    box-shadow: 10px 10px 30px rgba(0,0,0,0.6), inset 5px 5px 20px rgba(255,255,255,0.3);
+    display: flex; justify-content: center; align-items: center;
+    cursor: grab; touch-action: none; will-change: transform; z-index: 200;
+}
+.bowl::after { content: "TÀI LỘC"; font-weight: 900; color: rgba(255,255,255,0.8); text-shadow: 0 2px 4px black; }
+.bowl:active { cursor: grabbing; }
+
+/* Buttons & Status */
+.btn-action {
+    background: linear-gradient(to bottom, #f59e0b, #d97706);
+    border: none; padding: 15px 0; width: 100%; border-radius: 12px;
+    color: white; font-weight: bold; font-size: 1.1rem;
+    box-shadow: 0 5px 0 #92400e; cursor: pointer; transition: transform 0.1s;
+}
+.btn-action:active { transform: translateY(3px); box-shadow: 0 2px 0 #92400e; }
+.btn-action:disabled { filter: grayscale(1); opacity: 0.5; pointer-events: none; }
+
+.status-msg { text-align: center; margin-top: 10px; color: #9ca3af; font-style: italic; min-height: 20px; }
+
+/* ==========================================================================
+   5. MODAL & TAUNT FX
+   ========================================================================== */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; }
+.modal-content { background: #111; padding: 40px; border: 2px solid var(--gold); border-radius: 20px; width: 450px; text-align: center; box-shadow: 0 0 50px rgba(245, 158, 11, 0.3); }
+.game-title { color: var(--gold); margin: 0 0 30px; letter-spacing: 3px; }
+.setup-group { margin-bottom: 20px; text-align: left; }
+.setup-group label { display: block; color: #888; font-size: 0.8rem; margin-bottom: 5px; }
+select, input { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; outline: none; }
+.player-row { display: flex; gap: 10px; margin-bottom: 10px; }
+.btn-start { background: var(--gold); color: black; font-weight: bold; border: none; padding: 15px; width: 100%; border-radius: 8px; cursor: pointer; margin-top: 20px; }
+
+/* Cà khịa Bubble */
+.taunt-bubble {
+    position: absolute; z-index: 500;
+    background: white; color: black; padding: 8px 12px;
+    border-radius: 12px; border: 2px solid black;
+    font-weight: bold; font-size: 0.9rem;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.5);
+    white-space: nowrap; pointer-events: none;
+    animation: popUp 2s forwards;
+}
+.taunt-bubble::after { content:''; position:absolute; bottom:-6px; left:50%; margin-left:-6px; border-width:6px 6px 0; border-style:solid; border-color:black transparent transparent transparent; }
+@keyframes popUp { 
+    0% { opacity:0; transform:translate(-50%,-50%) scale(0); }
+    10% { opacity:1; transform:translate(-50%,-150%) scale(1.1); }
+    80% { opacity:1; transform:translate(-50%,-150%) scale(1); }
+    100% { opacity:0; transform:translate(-50%,-200%); } 
+}
