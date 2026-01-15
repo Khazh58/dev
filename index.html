@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ludo Casino Royal - Level Max</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="audioAssets" style="display:none">
+        </div>
+
+    <div class="modal" id="setupModal">
+        <div class="modal-content">
+            <h1 class="game-title">CASINO ROYAL</h1>
+            <div class="setup-group">
+                <label>SỐ LƯỢNG NGƯỜI CHƠI</label>
+                <select id="numHumans">
+                    <option value="1">1 Player vs CPU</option>
+                    <option value="2">2 Players (PVP)</option>
+                    <option value="3">3 Players</option>
+                    <option value="4">4 Players (Chaos)</option>
+                </select>
+            </div>
+            <div id="playerConfig" class="player-config">
+                </div>
+            <button class="btn-start" id="btnStartGame">VÀO SÒNG NGAY</button>
+        </div>
+    </div>
+
+    <div class="game-wrapper">
+        
+        <div class="board-frame">
+            <div class="board" id="board">
+                <div class="base b-red"></div>
+                <div class="base b-green"></div>
+                <div class="base b-blue"></div>
+                <div class="base b-yellow"></div>
+                
+                <canvas id="fxCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="controls-panel">
+            <div class="turn-indicator" id="turnIndicator">
+                <span class="label">LƯỢT CỦA</span>
+                <span class="player-name" id="turnName">ĐỎ</span>
+            </div>
+
+            <div class="shaker-container">
+                <div class="plate">
+                    <div class="dice-wrapper">
+                        <div class="dice 3d-dice" id="dice3D">
+                            <div class="face front"></div>
+                            <div class="face back"></div>
+                            <div class="face right"></div>
+                            <div class="face left"></div>
+                            <div class="face top"></div>
+                            <div class="face bottom"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bowl" id="bowl"></div>
+            </div>
+
+            <div class="action-zone">
+                <button class="btn-action" id="btnAction">XÓC ĐĨA</button>
+                <div class="status-msg" id="statusMsg">Sẵn sàng...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
